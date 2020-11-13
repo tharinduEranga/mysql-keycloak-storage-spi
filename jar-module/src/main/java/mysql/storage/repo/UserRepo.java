@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.keycloak.models.UserModel;
 import org.keycloak.storage.StorageId;
@@ -25,10 +26,16 @@ import lombok.extern.jbosslog.JBossLog;
 public class UserRepo {
 	
 	private BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
-	
+    private SessionFactory sessionFactory;
+
+    public UserRepo() {
+        sessionFactory = HibernateFactory.getSessionFactory();
+        initiateFactory();
+    }
+
+
     public void add(User car) {
-        HibernateFactory hibernateFactory = new HibernateFactory();
-        Session session = hibernateFactory.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         Transaction transaction = session.beginTransaction();
         try {
             session.save(car);
@@ -39,7 +46,6 @@ public class UserRepo {
             throw new RuntimeException(ex);
         } finally {
             session.close();
-            hibernateFactory.close();
         }
     }
 
@@ -53,8 +59,7 @@ public class UserRepo {
      
      public List<User> findAll(Integer start, Integer max) {
     	String baseQuery = "SELECT u FROM user u";
-     	HibernateFactory hibernateFactory = new HibernateFactory();
-     	Session session = hibernateFactory.getSessionFactory().openSession();
+     	Session session = sessionFactory.openSession();
      	Transaction transaction = session.beginTransaction();
      	List<User> result = new ArrayList();
      	try {
@@ -69,7 +74,6 @@ public class UserRepo {
             throw new RuntimeException(ex);
         } finally {
             session.close();
-            hibernateFactory.close();
         }
      	return result;
      }
@@ -111,8 +115,7 @@ public class UserRepo {
      
      public User findUserById(String id) {
     	 log.infov("\nRepo.findUserById > Getting user with id " + id);
-    	 HibernateFactory hibernateFactory = new HibernateFactory();
-         Session session = hibernateFactory.getSessionFactory().openSession();
+         Session session = sessionFactory.openSession();
          Transaction transaction = session.beginTransaction();
          User returnedUser = new User();
          try {
@@ -128,7 +131,6 @@ public class UserRepo {
              throw new RuntimeException(ex);
          } finally {
              session.close();
-             hibernateFactory.close();
          }
          return returnedUser;
      }
@@ -153,8 +155,7 @@ public class UserRepo {
      
      public int getUsersCount(){
     	log.infov("\nRepo.validateCredentials > Validating given password ");
-     	HibernateFactory hibernateFactory = new HibernateFactory();
-       	Session session = hibernateFactory.getSessionFactory().openSession();
+       	Session session = sessionFactory.openSession();
        	Transaction transaction = session.beginTransaction();
        	Integer returnedCount = 0;
        	try {
@@ -166,7 +167,6 @@ public class UserRepo {
             throw new RuntimeException(ex);
         } finally {
             session.close();
-            hibernateFactory.close();
         }
        	return returnedCount;
      }
@@ -178,8 +178,7 @@ public class UserRepo {
      public boolean validateCredentials(String username, String password) {
     	 log.infov("\nRepo.validateCredentials > Validating " + username);
     	 if(username == null ) return false;
-    	 HibernateFactory hibernateFactory = new HibernateFactory();
-         Session session = hibernateFactory.getSessionFactory().openSession();
+         Session session = sessionFactory.openSession();
          Transaction transaction = session.beginTransaction();
          boolean returnStatus = false;
          try {
@@ -194,7 +193,6 @@ public class UserRepo {
              throw new RuntimeException(ex);
          } finally {
              session.close();
-             hibernateFactory.close();
          }
          return returnStatus;
          
@@ -204,9 +202,8 @@ public class UserRepo {
     	 log.infov("\nRepo.updateCredentials > Generating enc password");
     	 String new_pwd = bCryptPasswordEncoder.encode(password);
     	 log.infov("\nRepo.updateCredentials > Updating password");
-    	 
-    	 HibernateFactory hibernateFactory = new HibernateFactory();
-         Session session = hibernateFactory.getSessionFactory().openSession();
+
+         Session session = sessionFactory.openSession();
          Transaction transaction = session.beginTransaction();
          try {
         	 Query q = session.createQuery("UPDATE user u SET u.password=:new_pwd WHERE u.email=:username ");
@@ -221,16 +218,14 @@ public class UserRepo {
              throw new RuntimeException(ex);
          } finally {
              session.close();
-             hibernateFactory.close();
          }
          return true;
      }
      
      public User CreateNewUser(String username) {
     	 log.infov("\nRepo.CreateNewUser > Creating new user " + username);
-    	 
-    	 HibernateFactory hibernateFactory = new HibernateFactory();
-         Session session = hibernateFactory.getSessionFactory().openSession();
+
+         Session session = sessionFactory.openSession();
          Transaction transaction = session.beginTransaction();
          try {
         	 Query q = session.createSQLQuery("INSERT INTO "
@@ -265,16 +260,14 @@ public class UserRepo {
              throw new RuntimeException(ex);
          } finally {
              session.close();
-             hibernateFactory.close();
          }
          return searchForUserByUsernameOrEmail(username);
      }
      
      public Boolean DeleteUser(UserModel username) {
     	 log.infov("\nRepo.DeleteUser > Deleting user " + username);
-    	 
-    	 HibernateFactory hibernateFactory = new HibernateFactory();
-         Session session = hibernateFactory.getSessionFactory().openSession();
+
+         Session session = sessionFactory.openSession();
          Transaction transaction = session.beginTransaction();
          try {
         	 Query q = session.createQuery("Delete from user WHERE id=:id");
@@ -289,7 +282,6 @@ public class UserRepo {
              throw new RuntimeException(ex);
          } finally {
              session.close();
-             hibernateFactory.close();
          }
          return true;
      }
@@ -298,4 +290,14 @@ public class UserRepo {
      public int size() {
          return 0;
      }
+
+
+    private void initiateFactory() {
+        try {
+            Session session = sessionFactory.openSession();
+            session.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

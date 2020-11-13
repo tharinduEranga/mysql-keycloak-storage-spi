@@ -7,9 +7,9 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 public class HibernateFactory {
 		
-	private SessionFactory factory;
+	private static SessionFactory factory;
 	
-    public SessionFactory getSessionFactory() {
+    public static SessionFactory getSessionFactory() {
         // Read setting information from an XML file using the standard resource location
         StandardServiceRegistry registry = new StandardServiceRegistryBuilder().configure().build();
         // Create a metadata sources using the specified service registry
@@ -17,11 +17,11 @@ public class HibernateFactory {
         // Represents the ORM model as determined from all provided mapping sources
         Metadata metadata = sources.getMetadataBuilder().build();
         // Create SessionFactory object
-        this.factory = metadata.getSessionFactoryBuilder().build();
-        return this.factory;
+        factory = metadata.getSessionFactoryBuilder().build();
+        return factory;
     }
     
     public void close() {
-    	this.factory.close();
+    	factory.close();
     }
 }
