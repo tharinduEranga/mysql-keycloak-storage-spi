@@ -3,27 +3,18 @@ package mysql.storage.main;
 import lombok.extern.jbosslog.JBossLog;
 import mysql.storage.entity.User;
 import mysql.storage.repo.UserRepo;
-
 import org.keycloak.component.ComponentModel;
 import org.keycloak.credential.CredentialInput;
 import org.keycloak.credential.CredentialInputUpdater;
 import org.keycloak.credential.CredentialInputValidator;
-import org.keycloak.credential.CredentialModel;
-import org.keycloak.storage.user.UserRegistrationProvider;
-import org.keycloak.models.GroupModel;
-import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.RealmModel;
-import org.keycloak.models.RoleModel;
-import org.keycloak.models.UserCredentialModel;
-import org.keycloak.models.UserModel;
+import org.keycloak.models.*;
+import org.keycloak.models.credential.PasswordCredentialModel;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.UserStorageProvider;
 import org.keycloak.storage.user.UserLookupProvider;
 import org.keycloak.storage.user.UserQueryProvider;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.keycloak.storage.user.UserRegistrationProvider;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +38,7 @@ public class DemoUserStorageProvider implements UserStorageProvider,
 
   @Override
   public boolean supportsCredentialType(String credentialType) {
-    return CredentialModel.PASSWORD.equals(credentialType);
+    return PasswordCredentialModel.TYPE.equals(credentialType);
   }
 
   @Override
